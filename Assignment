@@ -1,0 +1,71 @@
+import pandas as pd
+
+import numpy as np
+from scipy.stats import pearsonr
+import matplotlib.pyplot as plt
+from sklearn.linear_model import LinearRegression
+
+# Dataset 1: Trader Behavior (simulated)
+trader_data = {
+    'Date': pd.date_range('2023-01-01', periods=30),
+    'Trading_Volume': np.random.randint(1000000, 5000000, 30),  # Random volumes
+    'Buy_Sell_Ratio': np.random.uniform(0.8, 1.2, 30)  # Random ratios around 1
+}
+df_trader = pd.DataFrame(trader_data)
+
+# Dataset 2: Market Sentiment (simulated)
+sentiment_data = {
+    'Date': pd.date_range('2023-01-01', periods=30),
+    'Sentiment_Score': np.random.uniform(-0.5, 0.5, 30)  # Random scores
+}
+df_sentiment = pd.DataFrame(sentiment_data)
+
+# Merge datasets on Date
+df_merged = pd.merge(df_trader, df_sentiment, on='Date')
+
+# Correlation Analysis
+corr_volume_sentiment, _ = pearsonr(df_merged['Trading_Volume'], df_merged['Sentiment_Score'])
+corr_ratio_sentiment, _ = pearsonr(df_merged['Buy_Sell_Ratio'], df_merged['Sentiment_Score'])
+
+print("Correlations:")
+print(f"Trading Volume vs. Sentiment Score: {corr_volume_sentiment:.2f}")
+print(f"Buy/Sell Ratio vs. Sentiment Score: {corr_ratio_sentiment:.2f}")
+
+# Linear Regression: Sentiment as function of Buy/Sell Ratio
+X = df_merged[['Buy_Sell_Ratio']]
+y = df_merged['Sentiment_Score']
+model = LinearRegression().fit(X, y)
+print(f"Regression Coefficient (Buy/Sell Ratio -> Sentiment): {model.coef_[0]:.2f}")
+print(f"Intercept: {model.intercept_:.2f}")
+print(f"R-squared: {model.score(X, y):.2f}")
+
+# Visualizations
+fig, axs = plt.subplots(2, 2, figsize=(12, 8))
+
+# Scatter: Volume vs. Sentiment
+axs[0,0].scatter(df_merged['Trading_Volume'], df_merged['Sentiment_Score'])
+axs[0,0].set_title('Trading Volume vs. Sentiment Score')
+axs[0,0].set_xlabel('Trading Volume')
+axs[0,0].set_ylabel('Sentiment Score')
+
+# Scatter: Ratio vs. Sentiment
+axs[0,1].scatter(df_merged['Buy_Sell_Ratio'], df_merged['Sentiment_Score'])
+axs[0,1].set_title('Buy/Sell Ratio vs. Sentiment Score')
+axs[0,1].set_xlabel('Buy/Sell Ratio')
+axs[0,1].set_ylabel('Sentiment Score')
+
+# Time Series: Volume and Sentiment
+axs[1,0].plot(df_merged['Date'], df_merged['Trading_Volume'], label='Trading Volume')
+axs[1,0].set_title('Trading Volume Over Time')
+axs[1,0].set_xlabel('Date')
+axs[1,0].set_ylabel('Volume')
+axs[1,0].tick_params(axis='x', rotation=45)
+
+axs[1,1].plot(df_merged['Date'], df_merged['Sentiment_Score'], label='Sentiment Score', color='orange')
+axs[1,1].set_title('Sentiment Score Over Time')
+axs[1,1].set_xlabel('Date')
+axs[1,1].set_ylabel('Sentiment Score')
+axs[1,1].tick_params(axis='x', rotation=45)
+
+plt.tight_layout()
+plt.show()
